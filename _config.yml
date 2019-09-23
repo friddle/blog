@@ -1,11 +1,12 @@
-title: Friddle的碎碎念
+title: Friddle的博客
 email: friddle@qq.com
 description: >- # this means to ignore newlines until "baseurl:"
   从Ghost回到jenklly.完全是因为不想备案。直接挂在了github上。恩为了解决一个坑。到另一个坑去。
-twitter_username: friddle
+twitter_username: friddleleo
 github_username: friddle
 minimal_mistakes_skin: dark
 search: true
+logo:  "/assets/static/friddle.png"
 
 # Build settings
 markdown: kramdown
@@ -71,8 +72,8 @@ author:
   - label: "Zhihu"
     icon: "fab fa-fw fa-quora"
     url: "https://zhihu.com/people/copper-friddle"
-  - label: "Matters(politics)"
-    icon: "fab fa-fw fa-podcast"
+  - label: "Matters"
+    icon: "fab fa-fw fa-weibo"
     url: "https://matters.news/@friddle"
 
 footer:
