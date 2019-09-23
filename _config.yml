@@ -4,7 +4,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   从Ghost回到jenklly.完全是因为不想备案。直接挂在了github上。恩为了解决一个坑。到另一个坑去。
 twitter_username: friddle
 github_username: friddle
-minimal_mistakes_skin: default
+minimal_mistakes_skin: dark
 search: true
 
 # Build settings
@@ -54,7 +54,7 @@ plugins:
 author:
  name   : "Friddle Copper"
  avatar : "/assets/static/friddle.png"
- bio    : "中年油腻混吃等死大叔(年轻时当过左派)"
+ bio    : "中年油腻大叔(混吃等死)"
  links:
   - label: "Website"
     icon: "fas fa-fw fa-link"
