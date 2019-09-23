@@ -14,7 +14,18 @@ remote_theme: mmistakes/minimal-mistakes
 permalink: /:categories/:title/
 paginate: 5 # amount of posts to show
 paginate_path: /page:num/
-#timezone: CN
+timezone: CN
+
+kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..6
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+  enable_coderay: false
+
 
 include:
  - _pages
@@ -42,8 +53,8 @@ plugins:
 
 author:
  name   : "Friddle Copper"
- avatar : "/assets/images/friddle-avatar.jpg"
- bio    : "The day"
+ avatar : "/assets/static/friddle.png"
+ bio    : "中年油腻混吃等死大叔(年轻时当过左派)"
  links:
   - label: "Website"
     icon: "fas fa-fw fa-link"
@@ -57,8 +68,11 @@ author:
   - label: "Weibo"
     icon: "fab fa-fw fa-weibo"
     url: "https://weibo.com/1593952090"
+  - label: "Zhihu"
+    icon: "fab fa-fw fa-quora"
+    url: "https://zhihu.com/people/copper-friddle"
   - label: "Matters(politics)"
-    icon: "fab fa-fw fa-weibo"
+    icon: "fab fa-fw fa-podcast"
     url: "https://matters.news/@friddle"
 
 footer:
@@ -79,6 +93,7 @@ defaults:
     comments: true
     share: true
     related: true
+
  # _pages
  - scope:
     path: "_pages"
@@ -86,6 +101,16 @@ defaults:
    values:
     layout: single
     author_profile: true
+
+  # _tweet
+ - scope:
+     path: "_tweets"
+     type: pages
+   values:
+     layout: single
+     author_profile: false
+
+
 
 category_archive:
  type: liquid

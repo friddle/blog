@@ -3,9 +3,8 @@ title: "Nginx不能获取变量的坑"
 categories:
   - Tech
 tags:
-  - link
-  - Post Formats
-link: http://blog.friddle.me/Tech/NginxCannotGetVariable
+  - Nginx
+  - Lua
 ---
 
 最近做Docker镜像.需要获取环境变量.但是在网上查的都是这种写法.包括StackOverflow.但是就是没有返回.真的是一筹莫展.      
