@@ -124,5 +124,5 @@ tag_archive:
 comments:
    provider: "disqus"
    disqus:
-     shortname: "blog.friddle.me"
+     shortname: "blogfriddleme"
 
