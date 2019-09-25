@@ -34,9 +34,11 @@ CN = www.friddle.me
 
 
 [v3_req]
-keyUsage = keyEncipherment, dataEncipherment
-extendedKeyUsage = serverAuth
+keyUsage = keyEncipherment, dataEncipherment,nonRepudiation, digitalSignature
+extendedKeyUsage = serverAuth,clientAuth,codeSigning, emailProtection
 subjectAltName = @alt_names
+basicConstraints = CA:FALSE
+
 
 [alt_names]
 DNS.1 = appapi.friddle.me
