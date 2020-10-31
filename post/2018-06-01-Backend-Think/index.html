@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>对于中型系统的后端思考 | friddle的碎碎念</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.friddle.me/favicon.ico?v=1604164229284">
+<link rel="stylesheet" href="https://blog.friddle.me/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="想想看一个总结吧。
+从0做了一个中型系统。感觉经验上的收获还是挺多的。
+以前都是涉及边缘比较难的业务。不太想触及无聊的中层业务。感觉挺烦的。确实挺烦的。不过还是挺有收获的。。
+工具链
+首先还是得感谢框架的kotlin/spring/grpc..." />
+    <meta name="keywords" content="SSL,Spring" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.friddle.me">
+        <img src="https://blog.friddle.me/images/avatar.png?v=1604164229284" class="site-logo">
+        <h1 class="site-title">friddle的碎碎念</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/friddle" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://twitter.com/friddlecopper" target="_blank">
+            <i class="fab fa-twitter"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://weibo.com/u/1593952090" target="_blank">
+            <i class="fab fa-weibo"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://www.zhihu.com/people/copper-friddle" target="_blank">
+            <i class="fab fa-zhihu"></i>
+          </a>
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      感觉终于找到了update的方法
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://blog.friddle.me/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">对于中型系统的后端思考</h2>
+            <div class="post-date">2020-11-01</div>
+            
+            <div class="post-content" v-pre>
+              <h2 id="想想看一个总结吧">想想看一个总结吧。</h2>
+<p>从0做了一个中型系统。感觉经验上的收获还是挺多的。<br>
+以前都是涉及边缘比较难的业务。不太想触及无聊的中层业务。感觉挺烦的。确实挺烦的。不过还是挺有收获的。。</p>
+<h2 id="工具链">工具链</h2>
+<p>首先还是得感谢框架的kotlin/spring/grpc工具的idea+deepin。<br>
+这个工具链很满意没啥吐槽的。尤其感谢kotlin。对于大部分业务逻辑来说。真的少写好多代码。基本上以我这种拖拉的性格。还是在1天时间从3个表左右的数据库设计到接口完成。在本人的推动下。团队（我们团队在长沙。技术能力大家懂的）也开始慢慢习惯用Kotlin了。有效减少无用逻辑。</p>
+<p>Spring也没吐槽的。太成熟了。而且虽然是重。但是感觉真的分层设计的好。真的就能很容易的屏蔽和发现问题。话说现在我解决Spring问题都是直接去看源代码的。不得不承认。Spring和Tomcat发展到现在。核心的架构还是改的很少。这个真的很重要。我在构建自自己的系统也在想这方面的问题。</p>
+<p>说点细节的思考把。在业务复杂度慢慢失控的几个点。感觉对的方向和错误的方向。都集中于核心几个点。</p>
+<p>当然不能说搞个完美的系统架构。以前觉得系统只要和核心业务很近。就改的比较少。实际上。业务重心是会变的。说几个点吧。</p>
+<h3 id="1表的设计要原子化-一致化">1.表的设计要原子化。一致化。</h3>
+<p>这个绝对不能偷懒。业务层可以偷懒。可以写点很tough的逻辑。但是在数据库层面是绝对不能偷懒的。因为复杂的数据关系就会造成复杂的业务逻辑。到后面。数据大家都不敢动。业务层也就不敢动。上线后谁都不想大改数据库。因为数据弄乱复原比业务弄乱更麻烦。</p>
+<p>表的设计一定要原子化。不能为了偷懒随意加字段。该创建表的时候一定要创建表。还有非流程内的其他数据可以用一个字段。存Json来记录。举一个简单的列子。</p>
+<p>本来是支付购买会员的。但是后来业务上改成了支付购买实物商品赠送会员。（因为可恶的Apple）。队友提议直接在Order表里面加个userAddress和一个物流状态。暂时能很快的支持线上的要求（时间紧）。</p>
+<p>然后想了下。被我否决了。我认为几个点吧。一个是。这样逻辑关系又会弄乱。一旦以后有需求去查询我的商品信息的时候去查我的订单。这在怎样说不过去。我说代码可以先写成固定的。但是数据库一定要搞个原子化的表出来。一个是我的物品栏表。一个是发货状态地址表。业务就先写死了下单后就默认添加到用户栏就发货。有时间就拆分。果然在后期的需求的时候。这个设计就不会因为数据的混乱而不好改。只需要改业务逻辑就对了。</p>
+<p>数据集一定要原子化。就是一个完整的行为的数据集。最后可以支撑一个单独的业务逻辑。一个单独的解释。不要想一个表满足一个业务需求的多个方面。而是多个表满足一个业务需求。多对多的关系最好用关联表链接。不要做冗余字段。</p>
+<h3 id="2业务层尽量还是用service层沟通缓存系统少用表关联">2.业务层尽量还是用Service层沟通+缓存系统,少用表关联</h3>
+<p>连表查询确实容易简单很多逻辑。开始也喜欢用连表。毕竟少一层逻辑代码也开心一层。但是实际上不是这样的。<br>
+因为把业务逻辑写在xml层。会造成很多业务逻辑无法复用。而且没办法做到很好的解耦。一旦一个小的逻辑要改会造成很多xml都面临要改。<br>
+当然全部写在数据层也有问题。造成一个业务多次查表。所以这个时候需要缓存系统的存在。缓存系统可以优秀缓解业务压力。<br>
+当然清理缓存也会有清理缓存的问题。有时候清理缓存和生成缓存并不在同样的位置。具体怎么解决。等下再讲。</p>
+<h3 id="3抽象任务">3.抽象任务。</h3>
+<p>有一种类型的任务叫规则任务：<br>
+意味着我习惯把一串复杂的规则归纳统计。然后做成数据库数据。做总控开关。</p>
+<p>比如新创建用户我默认送她7天会员。对于我来说就是一个规则。这个规则是经常变的。比如会换成3天？。比如不送会员了。送其他东西。</p>
+<p>生成一个数据库的表。然后记录相关的规则。每一条数据都作为一个规则。并把参数配置，状态以及一些注释丢到里面。然后以这个表的数据作为总控开关。相当灵活。这样做到了充分的解耦。</p>
+<p>说道这里就说到实现。实现的话下面详细述说</p>
+<h3 id="4善用spring的bean管理">4.善用Spring的Bean管理。</h3>
+<p>分层是一个运行效率低的东西。毕竟多层调用不方便。但是实际上真的有利于代码的组织。<br>
+Aop估计大家都知道。但是Bean管理估计大家用的不多。</p>
+<p>针对上面说的即拆即拔很简单。</p>
+<pre><code class="language-kotlin">  interafce IRule
+  {
+      fun ruleId():Int
+      fun doAction(params:List&lt;*&gt;):Pair&lt;Boolean,String&gt;
+  }
+</code></pre>
+<p>定义好这样一个类。然后实现一个简单的继承</p>
+<pre><code class="language-kotlin">  @Service
+  class RuleOne
+  {
+    open fun ruleId():{return 1}
+    open fun doAction(params:List&lt;*&gt;){return Pair(success,&quot;do actions&quot;)}
+  }
+</code></pre>
+<p>然后在调用的时候可以直接这样</p>
+<pre><code> context.getBeansOfType(IRule::class.java).filter{it.ruleId()==ruleId}.doActions(params)  
+</code></pre>
+<p>这样的话就可以做到即拆即拔了。只要实现了相应接口就直接进入了业务逻辑中相当方便。<br>
+这样的逻辑适合在支付的时候实现一套平台接口（微信，支付宝）。主体逻辑不需要任何的改变。相应的依赖什么的都不需要。完全抽离开来了。<br>
+这是一个小技巧。这只是善用Spring的Bean管理的一个小方面。SpringBean管理还有很多方便的东西。这个都挺重要的。</p>
+<h3 id="5消息管理和微量型的message的实现">5.消息管理和微量型的Message的实现。</h3>
+<p>我们以前用的消息管理都是RabitMQ等大型的。这次这个项目我不是很想用这套。规则挺多的。</p>
+<p>说一下具体的需求来源。<br>
+我们当时有一个业务统计阅读数据。实时的。很少更新。<br>
+但是更新后需要清理缓存。而这个阅读行为不在统计业务的模块里面。<br>
+而这个清理数据暂时被我丢到阅读这个模块的逻辑代码里面。但是有一天重新看到这个代码的时候我就觉得不太好。不好解耦。<br>
+一秒钟想到了消息队列。毕竟阅读这个行为是个消息。而这个消息发生。各个地方的代码都会因为这个动作进行相应的联动。完全的解耦。一旦这个模块放弃了。相应的不会影响到另一个业务逻辑。。</p>
+<p>然后想了一下。毕竟还没有到大型项目。要用到RabitMq等逻辑。要用到错误机制。<br>
+只是业务内的充分解耦。所以自己实现了一套简单的实现。以后扩大后就用Mq实现来代替当前实现。</p>
+<p>定义MessageConsumer</p>
+<pre><code>open interface IMessageConsumer
+{
+    fun messageType():Int
+    fun receiverMessage(t:List&lt;Any?&gt;,callback:(()-&gt;Pair&lt;Boolean,String&gt;)?):Pair&lt;Boolean,String&gt;
+}
+</code></pre>
+<p>实现一个</p>
+<pre><code>    @Bean
+    fun clearCache(): IMessageConsumer {
+        return object:IMessageConsumer
+        {
+            override fun messageType(): Int {
+                return MESSAGE_TYPE_BUY_VIP
+            }
+
+            override fun receiverMessage(t: List&lt;Any?&gt;, callback: (() -&gt; Pair&lt;Boolean, String&gt;)?): Pair&lt;Boolean, String&gt; {
+                return Pair(true,&quot;&quot;)
+            }
+
+        }
+    }
+</code></pre>
+<p>一个简单的实现（当然具体实现还是添加了一些东西的）</p>
+<pre><code>@Service
+open class MessageQueue {
+    
+    @Autowired
+    lateinit var applicationContext: ApplicationContext
+    var logger=LoggerFactory.getLogger(MessageQueue::class.java)
+    var threadPool= Executors.newWorkStealingPool()
+    var consumers= arrayListOf&lt;IMessageConsumer&gt;()
+
+     fun sendMessage(type:Int,t:List&lt;Any?&gt;):Pair&lt;Boolean,String&gt;
+    {
+        val typeConsumer=applicationContext
+           .getBeansOfType(IMessageConsumer::class.java)
+           .values.filter { it.messageType()== type}
+
+
+        for(consumer:IMessageConsumer in typeConsumer)
+        {
+            threadPool.execute {
+                try {
+                    val result=consumer.receiverMessage(t,callback)
+                    if(!result.first) {
+                        throw Exception(&quot;task run failed:&quot;+result.second)
+                    }
+                } catch (e:Exception) {                  
+                    logger.error(&quot;consumer error:&quot;, e)
+                }
+            }
+        }
+        return Pair(true,&quot;&quot;)
+    }
+}
+</code></pre>
+<p>具体用什么Pool大家自己去考虑去。FixedThreadPool也不错。</p>
+<h3 id="6springcontextholder和utils">6.SpringContextHolder和Utils</h3>
+<p>有些时候涉及到数据库和配置的工具类没法写成静态方法。这个时候一个小技巧就是巧用SpringContextHolder 这个是我从别人那里拷过来的。这个思路真的挺不错的</p>
+<pre><code>@Component
+object SpringContextHolder:ApplicationContextAware{
+     private var applicationContext: ApplicationContext?=null;
+
+    override fun setApplicationContext(applicationContext: ApplicationContext) {
+        this.applicationContext=applicationContext
+    }
+
+    fun getApplicationContext():ApplicationContext?
+    {
+        return applicationContext
+    }
+
+    fun &lt;T&gt; getBean(beanName:String): T? {
+        if(applicationContext==null)return null
+        return applicationContext!!.getBean(beanName) as T
+    }
+
+    fun &lt;T&gt; getBean(classz:Class&lt;T&gt;):T?{
+        if(applicationContext==null)return null
+        return applicationContext!!.getBean(classz)
+    }
+}
+</code></pre>
+<p>工具类实现。</p>
+<pre><code>object AreaUtil
+{
+    fun getAreaByCode(code:String): QqArea?
+    {
+        return SpringContextHolder
+              .getBean(IAreaService::class.java)!!.getAreaByCode(code)
+    }
+}
+</code></pre>
+<p>调用</p>
+<pre><code>    AreaUtil.getAreaByCode(&quot;xxxxxxx&quot;)
+</code></pre>
+<p>这是利用Spring的事件监听来实现的。当启动完成后把ApplicationContext绑到SpringContextHolder这个静态类里面。然后所有工具类都可以用这个工具类获得动态Bean了。工具类还是这样调用舒服点。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.friddle.me/tag/in5urbSVXL/" class="tag">
+                    SSL
+                  </a>
+                
+                  <a href="https://blog.friddle.me/tag/uVez8Zc28E/" class="tag">
+                    Spring
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.friddle.me/post/2018-04-01-SmallTeam-Tools/">
+                  <h3 class="post-title">
+                    小团队流程工具推荐
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: '55b60121124aef74f0aa',
+        clientSecret: '80cd66c8dd8198183a88f73ff20d0fc64ff18485',
+        repo: 'friddle/comments',
+        owner: 'friddle',
+        admin: ['friddle'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

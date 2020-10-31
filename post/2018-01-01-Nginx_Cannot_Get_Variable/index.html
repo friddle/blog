@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" >
 
-<title>文章归档 | friddle的碎碎念</title>
+<title>Nginx不能获取变量的坑 | friddle的碎碎念</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -12,13 +12,25 @@
 <link rel="stylesheet" href="https://blog.friddle.me/styles/main.css">
 
 
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
 
 <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
 
 
-    <meta name="description" content="感觉终于找到了update的方法">
+    <meta name="description" content="最近做Docker镜像.需要获取环境变量.但是在网上查的都是这种写法.包括StackOverflow.
+但是就是没有返回.真的是一筹莫展.
+本地lua写这句话是正确的.就是在Nginx不返回任何值.
+http {
+  ...
+  serve..." />
+    <meta name="keywords" content="Nginx,Lua" />
   </head>
   <body>
     <div id="app" class="main">
@@ -80,80 +92,75 @@
 
       <div class="main-container">
         <div class="content-container" data-aos="fade-up">
-          
+          <div class="post-detail">
+            <h2 class="post-title">Nginx不能获取变量的坑</h2>
+            <div class="post-date">2020-11-01</div>
+            
+            <div class="post-content" v-pre>
+              <p>最近做Docker镜像.需要获取环境变量.但是在网上查的都是这种写法.包括StackOverflow.<br>
+但是就是没有返回.真的是一筹莫展.<br>
+本地lua写这句话是正确的.就是在Nginx不返回任何值.</p>
+<pre><code>http {
+  ...
+  server {
+    location / {
+      set_by_lua $api_key 'return os.getenv(&quot;API_KEY&quot;)';
+      ...
+    }
+  }
+}
+</code></pre>
+<p>然后果然在用Google深度搜索后,发现agentzh大大果然又是明灯指导我们.<br>
+给出了文档地址<br>
+<a href="!http://nginx.org/en/docs/ngx_core_module.html#env">nginx</a><br>
+明确告诉我们.在运行状态的时候Nginx已经果断把所有环境变量移除了.<br>
+好的被坑了.</p>
+<p>那就只能在<code>init_by_lua</code>里面使用了.</p>
+<pre><code>http
+{ 
 
-          <h2 class="archives-title">文章归档</h2>
-          <div class="archives-container">
+	init_by_lua_block
+	{
+		test=os.getenv(&quot;PATH&quot;);
+	}
+    server{
+     ....
+       location /
+       { 
+
+            set_by_lua $test 'return test';
+       }
+    }
+}
+
+</code></pre>
+<p>解决这个问题真的是已经准备看源代码了.恩.幸亏有明灯.</p>
+
+            </div>
             
-              <h2 class="year" data-aos="fade-in" data-aos-delay="500">2020</h2>
+              <div class="tag-container">
+                
+                  <a href="https://blog.friddle.me/tag/9WXmAgdKj/" class="tag">
+                    Nginx
+                  </a>
+                
+                  <a href="https://blog.friddle.me/tag/xhHKsBWSPk/" class="tag">
+                    Lua
+                  </a>
+                
+              </div>
+            
+            
+
+            
               
-                
-                  <article class="post">
-                    <a href="https://blog.friddle.me/post/2019-09-28-SelfSigned-IOS-Problem/">
-                      <h2 class="post-title">
-                        关于自签名证书到IOS13不支持问题
-                      </h2>
-                    </a>
-                  </article>
-                
+                <div id="gitalk-container" data-aos="fade-in"></div>
               
-                
-                  <article class="post">
-                    <a href="https://blog.friddle.me/post/2018-06-01-Backend-Think/">
-                      <h2 class="post-title">
-                        对于中型系统的后端思考
-                      </h2>
-                    </a>
-                  </article>
-                
-              
-                
-                  <article class="post">
-                    <a href="https://blog.friddle.me/post/2018-04-01-SmallTeam-Tools/">
-                      <h2 class="post-title">
-                        小团队流程工具推荐
-                      </h2>
-                    </a>
-                  </article>
-                
-              
-                
-                  <article class="post">
-                    <a href="https://blog.friddle.me/post/2018-03-01-NGINX-SSL-Buy/">
-                      <h2 class="post-title">
-                        购买SSL证书流水记
-                      </h2>
-                    </a>
-                  </article>
-                
-              
-                
-                  <article class="post">
-                    <a href="https://blog.friddle.me/post/2018-02-01-AliPay-Problem/">
-                      <h2 class="post-title">
-                        支付宝在信用分问题(仿毛语气)
-                      </h2>
-                    </a>
-                  </article>
-                
-              
-                
-                  <article class="post">
-                    <a href="https://blog.friddle.me/post/2018-01-01-Nginx_Cannot_Get_Variable/">
-                      <h2 class="post-title">
-                        Nginx不能获取变量的坑
-                      </h2>
-                    </a>
-                  </article>
-                
+
               
             
+
           </div>
-
-          <div class="pagination-container">
-  
-  
-</div>
 
         </div>
       </div>
@@ -174,6 +181,29 @@ var app = new Vue({
 </script>
 
 
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: '55b60121124aef74f0aa',
+        clientSecret: '80cd66c8dd8198183a88f73ff20d0fc64ff18485',
+        repo: 'friddle/comments',
+        owner: 'friddle',
+        admin: ['friddle'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
 
 
 

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>关于自签名证书到IOS13不支持问题 | friddle的碎碎念</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.friddle.me/favicon.ico?v=1604164229284">
+<link rel="stylesheet" href="https://blog.friddle.me/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="关于IOS13后自签名证书不合法的问题
+苹果官方文档。明确表明证书新的需求。文档为 https://support.apple.com/zh-cn/HT210176
+主要麻烦点集中于。生成
+
+TLS 服务器证书必须在证书的“使用者备用名称”..." />
+    <meta name="keywords" content="Grpc,IOS" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.friddle.me">
+        <img src="https://blog.friddle.me/images/avatar.png?v=1604164229284" class="site-logo">
+        <h1 class="site-title">friddle的碎碎念</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/friddle" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://twitter.com/friddlecopper" target="_blank">
+            <i class="fab fa-twitter"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://weibo.com/u/1593952090" target="_blank">
+            <i class="fab fa-weibo"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://www.zhihu.com/people/copper-friddle" target="_blank">
+            <i class="fab fa-zhihu"></i>
+          </a>
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      感觉终于找到了update的方法
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://blog.friddle.me/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">关于自签名证书到IOS13不支持问题</h2>
+            <div class="post-date">2020-11-01</div>
+            
+            <div class="post-content" v-pre>
+              <h3 id="关于ios13后自签名证书不合法的问题">关于IOS13后自签名证书不合法的问题</h3>
+<p>苹果官方文档。明确表明证书新的需求。文档为 <a href="https://support.apple.com/zh-cn/HT210176">https://support.apple.com/zh-cn/HT210176</a><br>
+主要麻烦点集中于。生成</p>
+<blockquote>
+<p>TLS 服务器证书必须在证书的“使用者备用名称”扩展中显示服务器的 DNS 名称。证书的 CommonName 中的 DNS 名称不再受信任。</p>
+</blockquote>
+<h5 id="rsakey的生成">rsakey的生成</h5>
+<p>rsa key的生成:<code>openssl genrsa -out private/friddle.pem 4096</code></p>
+<blockquote>
+<p>要2048以上的长度</p>
+</blockquote>
+<h5 id="准备ssl配置脚本">准备SSL配置脚本</h5>
+<pre><code>[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = CN
+ST = HuNan
+L = Changsha
+O = DrinkBird
+OU = DrinkBird
+CN = www.friddle.me
+
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment,nonRepudiation, digitalSignature  
+extendedKeyUsage = serverAuth,clientAuth,codeSigning, emailProtection #必须添加serverAuth和codeSigning
+subjectAltName = @alt_names
+basicConstraints = CA:FALSE
+
+
+[alt_names]
+DNS.1 = appapi.friddle.me
+DNS.2 = appapi2.friddle.me
+</code></pre>
+<h5 id="生成site命令">生成site命令</h5>
+<pre><code>openssl req -new -x509 -key private/friddle.pem -out ./private/sites/appapi.friddle.pem -days 824 -config openssl.cfg -extensions 'v3_req'
+</code></pre>
+<blockquote>
+<p>注意必须是825天以+sha256的加密规则<br>
+必须添加extendKeyUsage加上 serverAuth,codeSigning,digitalSignature</p>
+</blockquote>
+<h4 id="dart的grpc问题">dart的grpc问题</h4>
+<p>由证书造成的dart问题。可以通过加onBadCertificate的重构覆盖掉就行了<br>
+以现在非常稀少的flutter+grpc框架。恩。这个还是挺好的</p>
+<pre><code>  ClientChannel get releaseChannel =&gt;  ClientChannel('appapi.friddle.me',
+      port: 443,
+      options: ChannelOptions(
+          credentials: ChannelCredentials.secure(
+              certificates: _sslKey, password: null, authority: &quot;appap.friddle.me&quot;, onBadCertificate: (X509Certificate certificate, String host){
+                return true;
+          })));
+
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.friddle.me/tag/9-f7sOYrCa/" class="tag">
+                    Grpc
+                  </a>
+                
+                  <a href="https://blog.friddle.me/tag/Onta6AVaOI/" class="tag">
+                    IOS
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.friddle.me/post/2018-06-01-Backend-Think/">
+                  <h3 class="post-title">
+                    对于中型系统的后端思考
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: '55b60121124aef74f0aa',
+        clientSecret: '80cd66c8dd8198183a88f73ff20d0fc64ff18485',
+        repo: 'friddle/comments',
+        owner: 'friddle',
+        admin: ['friddle'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

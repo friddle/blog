@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>购买SSL证书流水记 | friddle的碎碎念</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.friddle.me/favicon.ico?v=1604164229284">
+<link rel="stylesheet" href="https://blog.friddle.me/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="关于购买证书时候的考虑。
+开始想选择沃通的证书。但是最近负面新闻爆表。Chrome和Firefox直接要屏蔽吊沃通的证书。所以直接说Goodbye了。
+然后就选择了Godaddy的证书。虽然网页介绍的信息等于无。每次打电话过去咨询。人家好听..." />
+    <meta name="keywords" content="Nginx,SSL" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.friddle.me">
+        <img src="https://blog.friddle.me/images/avatar.png?v=1604164229284" class="site-logo">
+        <h1 class="site-title">friddle的碎碎念</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+          <a class="social-link" href="https://github.com/friddle" target="_blank">
+            <i class="fab fa-github"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://twitter.com/friddlecopper" target="_blank">
+            <i class="fab fa-twitter"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://weibo.com/u/1593952090" target="_blank">
+            <i class="fab fa-weibo"></i>
+          </a>
+        
+      
+        
+          <a class="social-link" href="https://www.zhihu.com/people/copper-friddle" target="_blank">
+            <i class="fab fa-zhihu"></i>
+          </a>
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      感觉终于找到了update的方法
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://blog.friddle.me/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">购买SSL证书流水记</h2>
+            <div class="post-date">2020-11-01</div>
+            
+            <div class="post-content" v-pre>
+              <h3 id="关于购买证书时候的考虑">关于购买证书时候的考虑。</h3>
+<p>开始想选择沃通的证书。但是最近负面新闻爆表。Chrome和Firefox直接要屏蔽吊沃通的证书。所以直接说Goodbye了。<br>
+然后就选择了Godaddy的证书。虽然网页介绍的信息等于无。每次打电话过去咨询。人家好听的客服妹子听了我的描述基本就是:<code>先生你等几分钟。我跟美国Godaddy那边的技术团队交流下</code> 知道为什么国外的互联网搞不赢中国的原因了。<br>
+最后还是选了Godaddy的泛域名证书。然后就是辛苦的配置之旅了</p>
+<h3 id="关于ssl生成时候的操作">关于SSL生成时候的操作</h3>
+<p>生成私钥证书和CRT：<br>
+<code>openssl genrsa -out friddle.key 1024</code><br>
+<code>openssl req -new -sha256 -key ./friddle.key -out ./friddle.csr</code></p>
+<p>这一部分填的东西多。不同的网站估计会生成不同的csr。<br>
+而且又容易填错。我就写了一个脚本。通过改脚本生成比手动打靠谱。</p>
+<pre><code>#!/usr/bin/expect
+#generate openssl to 
+
+set website_prefix [lindex $argv 0]
+spawn openssl req -new -sha256 -key ./friddle.key -out ./$website_prefix.friddle.csr
+expect -re &quot;Country.*$&quot;
+send &quot;CN\r&quot;
+expect -re &quot;State.*$&quot;
+send &quot;Hunan\r&quot;
+expect -re &quot;Locality.*$&quot;
+send &quot;Changsha\r&quot;
+expect -re &quot;Organization Name.*$&quot;
+send &quot;Friddle Co., Ltd\r&quot;
+expect -re &quot;Organizational Unit Name.*$&quot;
+send  &quot;Friddle\r&quot;
+expect -re &quot;Common.*$&quot;
+send  &quot;$website_prefix.friddle.com\r&quot;
+expect -re  &quot;Email.*$&quot;
+send  &quot;friddle@friddle.me\r&quot;
+expect -re  &quot;A challenge.*$&quot;
+send  &quot;\r&quot;
+expect -re  &quot;An optional.*$&quot;
+send  &quot;\r&quot;
+expect eof
+exit 
+</code></pre>
+<p>一般来说COMMON_NAME对应的是你需要保护的域名地址。比如假如你买的泛域名证书就需要填 <code>*.friddle.me</code></p>
+<p>生成CRT后就可以把证书提交给Godaddy了。接下来就是配置你域名的TXT了或者邮箱发邮件就行验证。这点还是比较简单。<br>
+然后在把Godaddy生成的服务器证书文件下过来。</p>
+<h3 id="提前准备">提前准备。</h3>
+<ol>
+<li>各种服务开HTTPS端口配置。</li>
+<li>各种CDN的HTTPS配置。</li>
+</ol>
+<p>基本上大部分服务都跑的SLB。所以很幸运。大部分只要在SLB上加上去就行了。但是有些服务还是得自己配置。</p>
+<p>配置CDN的时候。阿里的同一个CDN地址都默认可以直接http和https的双向配置。而七牛的。就需要手动发工单过去。简直了。<br>
+难得吐槽一翻。提工单这种很影响效率的。</p>
+<h3 id="配置nginx">配置Nginx</h3>
+<p>基础的Nginx的基础配置。基本上加上去就ok了。</p>
+<pre><code>   server {
+        listen       443 ssl;
+        server_name  *.friddle.me;
+
+        ssl_certificate       cert/friddle.crt;
+        ssl_certificate_key   cert/friddle.key;
+   }
+</code></pre>
+<p>假如想全局跳转所有Http的访问请求到HTTPS则可以配置</p>
+<pre><code>    server {
+        listen       80;
+        server_name  *.friddle.me;
+        rewrite  ^ https://$host$request_uri? permanent;
+    } 
+</code></pre>
+<p>同时对后端的跳转最好做一下redirect的修改</p>
+<pre><code>      location / {
+            proxy_set_header client-real-url $scheme://$host$request_uri;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-Ip $remote_addr;
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_redirect ^ https://$host:$request_uri?;
+            proxy_pass http://xxx;
+        } 
+</code></pre>
+<p>最好注意下.转发有个<code>X-Forwarded-Proto</code> 这是一个规范.<br>
+这个规范对于后端库来说可以意识到最远程的访问请求是Https或者Http开头的.这个比较重要.<br>
+因为默认后端跳转代码一般会从后端Get默认的协议.而没加这个头.Tomcat或者后端程序做Http的.</p>
+<h3 id="性能问题">性能问题</h3>
+<p>服务都直接配置在阿里云的SLB上。所以不存在性能问题。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.friddle.me/tag/9WXmAgdKj/" class="tag">
+                    Nginx
+                  </a>
+                
+                  <a href="https://blog.friddle.me/tag/in5urbSVXL/" class="tag">
+                    SSL
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.friddle.me/post/2018-02-01-AliPay-Problem/">
+                  <h3 class="post-title">
+                    支付宝在信用分问题(仿毛语气)
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+              
+                <div id="gitalk-container" data-aos="fade-in"></div>
+              
+
+              
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: '55b60121124aef74f0aa',
+        clientSecret: '80cd66c8dd8198183a88f73ff20d0fc64ff18485',
+        repo: 'friddle/comments',
+        owner: 'friddle',
+        admin: ['friddle'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

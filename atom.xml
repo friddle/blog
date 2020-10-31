@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.friddle.me</id>
     <title>friddle的碎碎念</title>
-    <updated>2020-10-31T17:08:02.535Z</updated>
+    <updated>2020-10-31T17:10:32.147Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.friddle.me"/>
     <link rel="self" href="https://blog.friddle.me/atom.xml"/>
@@ -10,4 +10,459 @@
     <logo>https://blog.friddle.me/images/avatar.png</logo>
     <icon>https://blog.friddle.me/favicon.ico</icon>
     <rights>All rights reserved 2020, friddle的碎碎念</rights>
+    <entry>
+        <title type="html"><![CDATA[关于自签名证书到IOS13不支持问题]]></title>
+        <id>https://blog.friddle.me/post/2019-09-28-SelfSigned-IOS-Problem/</id>
+        <link href="https://blog.friddle.me/post/2019-09-28-SelfSigned-IOS-Problem/">
+        </link>
+        <updated>2020-10-31T17:10:12.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="关于ios13后自签名证书不合法的问题">关于IOS13后自签名证书不合法的问题</h3>
+<p>苹果官方文档。明确表明证书新的需求。文档为 <a href="https://support.apple.com/zh-cn/HT210176">https://support.apple.com/zh-cn/HT210176</a><br>
+主要麻烦点集中于。生成</p>
+<blockquote>
+<p>TLS 服务器证书必须在证书的“使用者备用名称”扩展中显示服务器的 DNS 名称。证书的 CommonName 中的 DNS 名称不再受信任。</p>
+</blockquote>
+<h5 id="rsakey的生成">rsakey的生成</h5>
+<p>rsa key的生成:<code>openssl genrsa -out private/friddle.pem 4096</code></p>
+<blockquote>
+<p>要2048以上的长度</p>
+</blockquote>
+<h5 id="准备ssl配置脚本">准备SSL配置脚本</h5>
+<pre><code>[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = CN
+ST = HuNan
+L = Changsha
+O = DrinkBird
+OU = DrinkBird
+CN = www.friddle.me
+
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment,nonRepudiation, digitalSignature  
+extendedKeyUsage = serverAuth,clientAuth,codeSigning, emailProtection #必须添加serverAuth和codeSigning
+subjectAltName = @alt_names
+basicConstraints = CA:FALSE
+
+
+[alt_names]
+DNS.1 = appapi.friddle.me
+DNS.2 = appapi2.friddle.me
+</code></pre>
+<h5 id="生成site命令">生成site命令</h5>
+<pre><code>openssl req -new -x509 -key private/friddle.pem -out ./private/sites/appapi.friddle.pem -days 824 -config openssl.cfg -extensions 'v3_req'
+</code></pre>
+<blockquote>
+<p>注意必须是825天以+sha256的加密规则<br>
+必须添加extendKeyUsage加上 serverAuth,codeSigning,digitalSignature</p>
+</blockquote>
+<h4 id="dart的grpc问题">dart的grpc问题</h4>
+<p>由证书造成的dart问题。可以通过加onBadCertificate的重构覆盖掉就行了<br>
+以现在非常稀少的flutter+grpc框架。恩。这个还是挺好的</p>
+<pre><code>  ClientChannel get releaseChannel =&gt;  ClientChannel('appapi.friddle.me',
+      port: 443,
+      options: ChannelOptions(
+          credentials: ChannelCredentials.secure(
+              certificates: _sslKey, password: null, authority: &quot;appap.friddle.me&quot;, onBadCertificate: (X509Certificate certificate, String host){
+                return true;
+          })));
+
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[对于中型系统的后端思考]]></title>
+        <id>https://blog.friddle.me/post/2018-06-01-Backend-Think/</id>
+        <link href="https://blog.friddle.me/post/2018-06-01-Backend-Think/">
+        </link>
+        <updated>2020-10-31T17:10:02.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="想想看一个总结吧">想想看一个总结吧。</h2>
+<p>从0做了一个中型系统。感觉经验上的收获还是挺多的。<br>
+以前都是涉及边缘比较难的业务。不太想触及无聊的中层业务。感觉挺烦的。确实挺烦的。不过还是挺有收获的。。</p>
+<h2 id="工具链">工具链</h2>
+<p>首先还是得感谢框架的kotlin/spring/grpc工具的idea+deepin。<br>
+这个工具链很满意没啥吐槽的。尤其感谢kotlin。对于大部分业务逻辑来说。真的少写好多代码。基本上以我这种拖拉的性格。还是在1天时间从3个表左右的数据库设计到接口完成。在本人的推动下。团队（我们团队在长沙。技术能力大家懂的）也开始慢慢习惯用Kotlin了。有效减少无用逻辑。</p>
+<p>Spring也没吐槽的。太成熟了。而且虽然是重。但是感觉真的分层设计的好。真的就能很容易的屏蔽和发现问题。话说现在我解决Spring问题都是直接去看源代码的。不得不承认。Spring和Tomcat发展到现在。核心的架构还是改的很少。这个真的很重要。我在构建自自己的系统也在想这方面的问题。</p>
+<p>说点细节的思考把。在业务复杂度慢慢失控的几个点。感觉对的方向和错误的方向。都集中于核心几个点。</p>
+<p>当然不能说搞个完美的系统架构。以前觉得系统只要和核心业务很近。就改的比较少。实际上。业务重心是会变的。说几个点吧。</p>
+<h3 id="1表的设计要原子化-一致化">1.表的设计要原子化。一致化。</h3>
+<p>这个绝对不能偷懒。业务层可以偷懒。可以写点很tough的逻辑。但是在数据库层面是绝对不能偷懒的。因为复杂的数据关系就会造成复杂的业务逻辑。到后面。数据大家都不敢动。业务层也就不敢动。上线后谁都不想大改数据库。因为数据弄乱复原比业务弄乱更麻烦。</p>
+<p>表的设计一定要原子化。不能为了偷懒随意加字段。该创建表的时候一定要创建表。还有非流程内的其他数据可以用一个字段。存Json来记录。举一个简单的列子。</p>
+<p>本来是支付购买会员的。但是后来业务上改成了支付购买实物商品赠送会员。（因为可恶的Apple）。队友提议直接在Order表里面加个userAddress和一个物流状态。暂时能很快的支持线上的要求（时间紧）。</p>
+<p>然后想了下。被我否决了。我认为几个点吧。一个是。这样逻辑关系又会弄乱。一旦以后有需求去查询我的商品信息的时候去查我的订单。这在怎样说不过去。我说代码可以先写成固定的。但是数据库一定要搞个原子化的表出来。一个是我的物品栏表。一个是发货状态地址表。业务就先写死了下单后就默认添加到用户栏就发货。有时间就拆分。果然在后期的需求的时候。这个设计就不会因为数据的混乱而不好改。只需要改业务逻辑就对了。</p>
+<p>数据集一定要原子化。就是一个完整的行为的数据集。最后可以支撑一个单独的业务逻辑。一个单独的解释。不要想一个表满足一个业务需求的多个方面。而是多个表满足一个业务需求。多对多的关系最好用关联表链接。不要做冗余字段。</p>
+<h3 id="2业务层尽量还是用service层沟通缓存系统少用表关联">2.业务层尽量还是用Service层沟通+缓存系统,少用表关联</h3>
+<p>连表查询确实容易简单很多逻辑。开始也喜欢用连表。毕竟少一层逻辑代码也开心一层。但是实际上不是这样的。<br>
+因为把业务逻辑写在xml层。会造成很多业务逻辑无法复用。而且没办法做到很好的解耦。一旦一个小的逻辑要改会造成很多xml都面临要改。<br>
+当然全部写在数据层也有问题。造成一个业务多次查表。所以这个时候需要缓存系统的存在。缓存系统可以优秀缓解业务压力。<br>
+当然清理缓存也会有清理缓存的问题。有时候清理缓存和生成缓存并不在同样的位置。具体怎么解决。等下再讲。</p>
+<h3 id="3抽象任务">3.抽象任务。</h3>
+<p>有一种类型的任务叫规则任务：<br>
+意味着我习惯把一串复杂的规则归纳统计。然后做成数据库数据。做总控开关。</p>
+<p>比如新创建用户我默认送她7天会员。对于我来说就是一个规则。这个规则是经常变的。比如会换成3天？。比如不送会员了。送其他东西。</p>
+<p>生成一个数据库的表。然后记录相关的规则。每一条数据都作为一个规则。并把参数配置，状态以及一些注释丢到里面。然后以这个表的数据作为总控开关。相当灵活。这样做到了充分的解耦。</p>
+<p>说道这里就说到实现。实现的话下面详细述说</p>
+<h3 id="4善用spring的bean管理">4.善用Spring的Bean管理。</h3>
+<p>分层是一个运行效率低的东西。毕竟多层调用不方便。但是实际上真的有利于代码的组织。<br>
+Aop估计大家都知道。但是Bean管理估计大家用的不多。</p>
+<p>针对上面说的即拆即拔很简单。</p>
+<pre><code class="language-kotlin">  interafce IRule
+  {
+      fun ruleId():Int
+      fun doAction(params:List&lt;*&gt;):Pair&lt;Boolean,String&gt;
+  }
+</code></pre>
+<p>定义好这样一个类。然后实现一个简单的继承</p>
+<pre><code class="language-kotlin">  @Service
+  class RuleOne
+  {
+    open fun ruleId():{return 1}
+    open fun doAction(params:List&lt;*&gt;){return Pair(success,&quot;do actions&quot;)}
+  }
+</code></pre>
+<p>然后在调用的时候可以直接这样</p>
+<pre><code> context.getBeansOfType(IRule::class.java).filter{it.ruleId()==ruleId}.doActions(params)  
+</code></pre>
+<p>这样的话就可以做到即拆即拔了。只要实现了相应接口就直接进入了业务逻辑中相当方便。<br>
+这样的逻辑适合在支付的时候实现一套平台接口（微信，支付宝）。主体逻辑不需要任何的改变。相应的依赖什么的都不需要。完全抽离开来了。<br>
+这是一个小技巧。这只是善用Spring的Bean管理的一个小方面。SpringBean管理还有很多方便的东西。这个都挺重要的。</p>
+<h3 id="5消息管理和微量型的message的实现">5.消息管理和微量型的Message的实现。</h3>
+<p>我们以前用的消息管理都是RabitMQ等大型的。这次这个项目我不是很想用这套。规则挺多的。</p>
+<p>说一下具体的需求来源。<br>
+我们当时有一个业务统计阅读数据。实时的。很少更新。<br>
+但是更新后需要清理缓存。而这个阅读行为不在统计业务的模块里面。<br>
+而这个清理数据暂时被我丢到阅读这个模块的逻辑代码里面。但是有一天重新看到这个代码的时候我就觉得不太好。不好解耦。<br>
+一秒钟想到了消息队列。毕竟阅读这个行为是个消息。而这个消息发生。各个地方的代码都会因为这个动作进行相应的联动。完全的解耦。一旦这个模块放弃了。相应的不会影响到另一个业务逻辑。。</p>
+<p>然后想了一下。毕竟还没有到大型项目。要用到RabitMq等逻辑。要用到错误机制。<br>
+只是业务内的充分解耦。所以自己实现了一套简单的实现。以后扩大后就用Mq实现来代替当前实现。</p>
+<p>定义MessageConsumer</p>
+<pre><code>open interface IMessageConsumer
+{
+    fun messageType():Int
+    fun receiverMessage(t:List&lt;Any?&gt;,callback:(()-&gt;Pair&lt;Boolean,String&gt;)?):Pair&lt;Boolean,String&gt;
+}
+</code></pre>
+<p>实现一个</p>
+<pre><code>    @Bean
+    fun clearCache(): IMessageConsumer {
+        return object:IMessageConsumer
+        {
+            override fun messageType(): Int {
+                return MESSAGE_TYPE_BUY_VIP
+            }
+
+            override fun receiverMessage(t: List&lt;Any?&gt;, callback: (() -&gt; Pair&lt;Boolean, String&gt;)?): Pair&lt;Boolean, String&gt; {
+                return Pair(true,&quot;&quot;)
+            }
+
+        }
+    }
+</code></pre>
+<p>一个简单的实现（当然具体实现还是添加了一些东西的）</p>
+<pre><code>@Service
+open class MessageQueue {
+    
+    @Autowired
+    lateinit var applicationContext: ApplicationContext
+    var logger=LoggerFactory.getLogger(MessageQueue::class.java)
+    var threadPool= Executors.newWorkStealingPool()
+    var consumers= arrayListOf&lt;IMessageConsumer&gt;()
+
+     fun sendMessage(type:Int,t:List&lt;Any?&gt;):Pair&lt;Boolean,String&gt;
+    {
+        val typeConsumer=applicationContext
+           .getBeansOfType(IMessageConsumer::class.java)
+           .values.filter { it.messageType()== type}
+
+
+        for(consumer:IMessageConsumer in typeConsumer)
+        {
+            threadPool.execute {
+                try {
+                    val result=consumer.receiverMessage(t,callback)
+                    if(!result.first) {
+                        throw Exception(&quot;task run failed:&quot;+result.second)
+                    }
+                } catch (e:Exception) {                  
+                    logger.error(&quot;consumer error:&quot;, e)
+                }
+            }
+        }
+        return Pair(true,&quot;&quot;)
+    }
+}
+</code></pre>
+<p>具体用什么Pool大家自己去考虑去。FixedThreadPool也不错。</p>
+<h3 id="6springcontextholder和utils">6.SpringContextHolder和Utils</h3>
+<p>有些时候涉及到数据库和配置的工具类没法写成静态方法。这个时候一个小技巧就是巧用SpringContextHolder 这个是我从别人那里拷过来的。这个思路真的挺不错的</p>
+<pre><code>@Component
+object SpringContextHolder:ApplicationContextAware{
+     private var applicationContext: ApplicationContext?=null;
+
+    override fun setApplicationContext(applicationContext: ApplicationContext) {
+        this.applicationContext=applicationContext
+    }
+
+    fun getApplicationContext():ApplicationContext?
+    {
+        return applicationContext
+    }
+
+    fun &lt;T&gt; getBean(beanName:String): T? {
+        if(applicationContext==null)return null
+        return applicationContext!!.getBean(beanName) as T
+    }
+
+    fun &lt;T&gt; getBean(classz:Class&lt;T&gt;):T?{
+        if(applicationContext==null)return null
+        return applicationContext!!.getBean(classz)
+    }
+}
+</code></pre>
+<p>工具类实现。</p>
+<pre><code>object AreaUtil
+{
+    fun getAreaByCode(code:String): QqArea?
+    {
+        return SpringContextHolder
+              .getBean(IAreaService::class.java)!!.getAreaByCode(code)
+    }
+}
+</code></pre>
+<p>调用</p>
+<pre><code>    AreaUtil.getAreaByCode(&quot;xxxxxxx&quot;)
+</code></pre>
+<p>这是利用Spring的事件监听来实现的。当启动完成后把ApplicationContext绑到SpringContextHolder这个静态类里面。然后所有工具类都可以用这个工具类获得动态Bean了。工具类还是这样调用舒服点。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[小团队流程工具推荐]]></title>
+        <id>https://blog.friddle.me/post/2018-04-01-SmallTeam-Tools/</id>
+        <link href="https://blog.friddle.me/post/2018-04-01-SmallTeam-Tools/">
+        </link>
+        <updated>2020-10-31T17:09:18.000Z</updated>
+        <content type="html"><![CDATA[<p>这篇文章基本的目的是我一个朋友需要一份规范来图超他团队的脸。<br>
+我们团队是没有成文的整体的流程规范的。有默认的互联网产品规范。<br>
+但是对于我朋友的要求。我觉得还是写一个基础的容易让人理解的团队的协作的信息和规范</p>
+<h2 id="职位要求">职位要求</h2>
+<h3 id="pm">pm</h3>
+<p>pm主要是一个口。任何对开发的需求必须都要经过PM进行处理。消费。分解。然后再吐给程序员。最差的PM就是直接把自己当客户或者用户的传声筒。没有做任何动脑的事情。直接客户要求什么就直接提给开发。</p>
+<p>一般来说，对PM的事实要求是很高的。<br>
+1.首先你要驾驭心高气傲的程序员。人家基本上不会吃死磨硬泡的那一套。但是你假如有逻辑。能表达。能拆分需求不提不能实现的需求。基本上程序员能照做。<br>
+2.第二你要能扛的住不合理的需求。当然第一你要首先能分辨什么需求合理哪些需求不合理。第二。你要知道团队能做啥不能做啥。第三。你还得扛得住。<br>
+3.第三你要能分解需求。确定工期。持续跟踪。持续反馈。协调整个团队能往前走不走偏。</p>
+<p>以我的经验。我把PM分为三类。<br>
+1.基础PM：做好基础需求文档。做好需求拆分。能处理市场和各种渠道的功能性bug。能跟开发进行有效的沟通。能基础分辨哪些是合理的哪些不合理。<br>
+2.中级PM：对产品有自己的理解。能够把这种理解能够有效的传递给程序员。能基本对上面的不合理需求转换成合理的需求以及能指出为什么不合理。能够完成基本市场的数据分析和用户心里的分析。<br>
+3.高级PM：能知道团队的能力极限。能够完整理解产品和需求。并有效预估产品走向和需求。给予合理的工期和安排。并且能给把思想传递给开发。能协调整个团队关于产品的走向。</p>
+<h3 id="开发">开发</h3>
+<p>基本上对程序员的硬性划分靠各种技术能力。<br>
+具体没有什么好说的。能干事就是能干。不服你上。招聘上全是硬性要求不是软性的。</p>
+<p>但是我还是说程序员在软性素质的一些差别。</p>
+<p>1.基础的程序员：能对着需求文档及时完成。能预估好自己的工期。劲量的少bug。<br>
+2.中级的程序员：能协调相关产品的技术开发问题。能跟pm进行合理反馈和沟通。能感知产品方向。能反馈不合理需求<br>
+3.高级程序员： 能确保产品在架构上和产品走向一致。能够实现高扩展。能推动团队的自动化，高效率的开发。能主动尝试各种技术。提高开发团队的能力极限。</p>
+<h3 id="测试">测试</h3>
+<p>测试基本上就是：<br>
+1.基础确保功能测试正常。（假如没有测试。那PM要负责这一项。这点需要）<br>
+2.做好自动化测试和测试框架</p>
+<h3 id="市场运营">市场/运营</h3>
+<p>市场/运营不熟。<br>
+但是以我的经验。市场和运营一定要做好几点。<br>
+1.数据和需求的收集和反馈。<br>
+2.相关资料的集中和统一管理。（包括各种各样的渠道通道）<br>
+3.相关的需求能统一反馈给PM。千万不能直接和程序员沟通。</p>
+<h2 id="工具推荐">工具推荐</h2>
+<h4 id="项目管理系统zentao禅道">项目管理系统:Zentao(禅道)</h4>
+<p>我们团队用来做简单的协作系统，可提供需求分解和bug管理。<br>
+手机端收费</p>
+<h4 id="项目管理系统teambition">项目管理系统:Teambition</h4>
+<h4 id="团队信息集成系统confluneces">团队信息集成系统:confluneces</h4>
+<p>付费。但是好用<br>
+做信息系统管理。可以沉淀知识。信息。比如我们团队新同事入职可以在上面找到所有的一切信息。包括人员信息。工作职责。相关人员。相关软件</p>
+<h4 id="团队交流系统钉钉">团队交流系统：钉钉</h4>
+<p>对老板来说非常适合使用的IM交流系统。对员工来说不是那么美好。不过也确实提高了整个团队的战斗力。就看你怎么用</p>
+<h4 id="团队交流系统worktitle">团队交流系统：Worktitle</h4>
+<p>对团队非常好用的Dashboard方式的交流系统。适合小巧轻便的团队。</p>
+<h4 id="office协作google全家桶">Office协作：Google全家桶</h4>
+<p>被墙了。适合整个网络翻墙的团队</p>
+<h4 id="office协作石墨文档">Office协作：石墨文档</h4>
+<p>这个协作文档还不错</p>
+<h4 id="脑图协作-processon">脑图协作： ProcessOn</h4>
+<p>可以协作做脑图</p>
+<h4 id="pm工期分解软件omniplanmaconly">PM工期分解软件：omniplan（MacOnly）</h4>
+<p>适合做工期分解的软件。非常好用</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[购买SSL证书流水记]]></title>
+        <id>https://blog.friddle.me/post/2018-03-01-NGINX-SSL-Buy/</id>
+        <link href="https://blog.friddle.me/post/2018-03-01-NGINX-SSL-Buy/">
+        </link>
+        <updated>2020-10-31T17:09:07.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="关于购买证书时候的考虑">关于购买证书时候的考虑。</h3>
+<p>开始想选择沃通的证书。但是最近负面新闻爆表。Chrome和Firefox直接要屏蔽吊沃通的证书。所以直接说Goodbye了。<br>
+然后就选择了Godaddy的证书。虽然网页介绍的信息等于无。每次打电话过去咨询。人家好听的客服妹子听了我的描述基本就是:<code>先生你等几分钟。我跟美国Godaddy那边的技术团队交流下</code> 知道为什么国外的互联网搞不赢中国的原因了。<br>
+最后还是选了Godaddy的泛域名证书。然后就是辛苦的配置之旅了</p>
+<h3 id="关于ssl生成时候的操作">关于SSL生成时候的操作</h3>
+<p>生成私钥证书和CRT：<br>
+<code>openssl genrsa -out friddle.key 1024</code><br>
+<code>openssl req -new -sha256 -key ./friddle.key -out ./friddle.csr</code></p>
+<p>这一部分填的东西多。不同的网站估计会生成不同的csr。<br>
+而且又容易填错。我就写了一个脚本。通过改脚本生成比手动打靠谱。</p>
+<pre><code>#!/usr/bin/expect
+#generate openssl to 
+
+set website_prefix [lindex $argv 0]
+spawn openssl req -new -sha256 -key ./friddle.key -out ./$website_prefix.friddle.csr
+expect -re &quot;Country.*$&quot;
+send &quot;CN\r&quot;
+expect -re &quot;State.*$&quot;
+send &quot;Hunan\r&quot;
+expect -re &quot;Locality.*$&quot;
+send &quot;Changsha\r&quot;
+expect -re &quot;Organization Name.*$&quot;
+send &quot;Friddle Co., Ltd\r&quot;
+expect -re &quot;Organizational Unit Name.*$&quot;
+send  &quot;Friddle\r&quot;
+expect -re &quot;Common.*$&quot;
+send  &quot;$website_prefix.friddle.com\r&quot;
+expect -re  &quot;Email.*$&quot;
+send  &quot;friddle@friddle.me\r&quot;
+expect -re  &quot;A challenge.*$&quot;
+send  &quot;\r&quot;
+expect -re  &quot;An optional.*$&quot;
+send  &quot;\r&quot;
+expect eof
+exit 
+</code></pre>
+<p>一般来说COMMON_NAME对应的是你需要保护的域名地址。比如假如你买的泛域名证书就需要填 <code>*.friddle.me</code></p>
+<p>生成CRT后就可以把证书提交给Godaddy了。接下来就是配置你域名的TXT了或者邮箱发邮件就行验证。这点还是比较简单。<br>
+然后在把Godaddy生成的服务器证书文件下过来。</p>
+<h3 id="提前准备">提前准备。</h3>
+<ol>
+<li>各种服务开HTTPS端口配置。</li>
+<li>各种CDN的HTTPS配置。</li>
+</ol>
+<p>基本上大部分服务都跑的SLB。所以很幸运。大部分只要在SLB上加上去就行了。但是有些服务还是得自己配置。</p>
+<p>配置CDN的时候。阿里的同一个CDN地址都默认可以直接http和https的双向配置。而七牛的。就需要手动发工单过去。简直了。<br>
+难得吐槽一翻。提工单这种很影响效率的。</p>
+<h3 id="配置nginx">配置Nginx</h3>
+<p>基础的Nginx的基础配置。基本上加上去就ok了。</p>
+<pre><code>   server {
+        listen       443 ssl;
+        server_name  *.friddle.me;
+
+        ssl_certificate       cert/friddle.crt;
+        ssl_certificate_key   cert/friddle.key;
+   }
+</code></pre>
+<p>假如想全局跳转所有Http的访问请求到HTTPS则可以配置</p>
+<pre><code>    server {
+        listen       80;
+        server_name  *.friddle.me;
+        rewrite  ^ https://$host$request_uri? permanent;
+    } 
+</code></pre>
+<p>同时对后端的跳转最好做一下redirect的修改</p>
+<pre><code>      location / {
+            proxy_set_header client-real-url $scheme://$host$request_uri;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-Ip $remote_addr;
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_redirect ^ https://$host:$request_uri?;
+            proxy_pass http://xxx;
+        } 
+</code></pre>
+<p>最好注意下.转发有个<code>X-Forwarded-Proto</code> 这是一个规范.<br>
+这个规范对于后端库来说可以意识到最远程的访问请求是Https或者Http开头的.这个比较重要.<br>
+因为默认后端跳转代码一般会从后端Get默认的协议.而没加这个头.Tomcat或者后端程序做Http的.</p>
+<h3 id="性能问题">性能问题</h3>
+<p>服务都直接配置在阿里云的SLB上。所以不存在性能问题。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[支付宝在信用分问题(仿毛语气)]]></title>
+        <id>https://blog.friddle.me/post/2018-02-01-AliPay-Problem/</id>
+        <link href="https://blog.friddle.me/post/2018-02-01-AliPay-Problem/">
+        </link>
+        <updated>2020-10-31T17:08:24.000Z</updated>
+        <content type="html"><![CDATA[<p>昨天看了某老编辑写的历史转折中的支付宝。觉得谈的很诚恳很有价值。但是还有几个问题。我想着重谈一下。支付宝同志在工作中犯得一些错误。</p>
+<p>昨天支付宝事情闹的很大。前因后果大家也很清楚了。有些同志认为这是路线问题。认为支付宝自决于人民。</p>
+<p>让我说。支付宝同志的想法是好的。但是工作方法不对。芝麻信用750分以上的才能评论。定个分数这种事情。</p>
+<p>第一个是太死板不灵活。评分749的就不行。同志们，定规则不能这么定的。太死板。没考虑到我国复杂的国情和各地不同的消费能力。750分在北京有可能只是一个写代码的技术流氓而已。</p>
+<p>第二个问题就是规则太赤裸裸了。不利于团结他部分同志。你看大部分攻击支付宝的不都是一群没有上750分的流氓同志吗。你做了一个功能。大家都能看到或者搜到。那就应该替大部分普通群众考虑考虑。不能直接就把一部分有着上进心的同志赶走了。这样做。人民群众会闹矛盾的。</p>
+<p>你看其他产品比如直播平台。人家的工作方式就做的细致的多，有钱的捧个钱场。没钱的捧个人场。偶尔还发点小礼物，给大家点小礼品。让手头不太富裕的人也能感受到直播的气氛。感受到平台的关怀。你看人家的做法就很值得学习吗。</p>
+<p>我们经常提的。有些同志想法是好的。就是做事太鲁莽。不去调研。不去做工作。不讲究工作方法。整天就盯着数据看。有些好的受人民群众喜欢的做法一时看不到成效就不做了，不改善了。有些短时间搞得火热的东西。实则搞完了热闹玩了，人全都走完了的做法到有人经常搞。</p>
+<p>有些同志老是喜欢说数据不说谎。我看这些同志就直接把数据当成目标了。我们常说要把复杂的问题简化。不是把复杂的问题异化。把一个问题变成另一个问题了。把让用户留下来的问题变成了怎么让报表数据好看的问题。不讲实际。不实事求是。应该值得好好思考。</p>
+<p>当然好的也要说：支付宝的同志非常清楚自己有什么。看的也比较清楚。这值得鼓励。未来社会最关键的就是信用。我们这事天天提。月月提。这一点。这是个对的方向。毋容置疑的方向。但是对信用这个点，一定要用好。不能毛躁。一定要讲方法。</p>
+<p>你看。你们做的圈子。想法是好的。男财配女貌。这个是一个好的工作点。这是人命群众大的需求。<br>
+但是。我们要清楚知道我们有的是什么。是信用。我们做的产品是为谁服务的。是为经济比较好的男性。是为经济有点拮据爱慕虚荣的女性。</p>
+<p>不是一些富二代。一些外围女。服务这些人能够带来更多的人用。我看不能吧。服务这些人最多就是闹腾一阵。过一段时间老百姓就忘了。数据也不好看了。支付宝的名声也更差了。</p>
+<p>支付宝的同志可以认真的做些工作。比如：匹配一些月流水高的男性和一些喜欢用花呗买化妆品的女性。当然相反的也可以匹配一些 月流水高的女性和一些喜欢健身器材的男性。<br>
+入口也不要搞什么圈子。名字太抽象一看就是学程序员的思维做的。人家“朋友圈“念的多通顺。强调了这是朋友。老百姓喜欢朋友这个概念。信任朋友。你叫自己是圈子。明显又把自己当工具了。国外有一个公司google据说很厉害。做了社交产品叫circle一样没做起来。就是把自己当工具的思维太严重了。你们就不要犯同样的错误了。</p>
+<p>人民群众这种不是很能上台面的需求就不要搞的大家都知道。老百姓都有隐私的。入口也不要太赤裸裸。就差没告诉老百姓这是有钱人用来嫖的了。<br>
+干脆就叫附近有意思的人。对外宣传就说算法自己匹配的。没有人工干扰。<br>
+这样做就很好吗。同一个阶级的会有话题。聊得开。聊开了以后。人家去不去解不解决生理需求那是人家自己的事情了。你看这样做大家都能表示理解了吗。</p>
+<p>信任值这种东西我看默认就不要暴露了。当然可以让群众自己决定给不给人看对吧。人与人的信任感。不是我们强迫给的。是我们提供给人家的。</p>
+<p>爱运动的可以匹配爱运动的。爱车的可以匹配爱车的。有小孩的可以匹配爱小孩的。你看可以做的工作很多。不要这么死板。<br>
+匹配的时候做点细致的工作。贴一点好的标签。不要只盯着一两个粗俗的点。要有效要方便。要做有意义的有意思的。不要做老是盯着数据的</p>
+<p>你们做的圈子，明显一件好事办成了坏事。群众信任你是因为你有数据。一个个月流水上万的陌生人不必陌陌上的陌生人靠谱。结果了。搞圈子里面。一大堆技术流氓在那里为非作歹，盗用别人的资料发帖。破坏平台声誉。搞的信用高的不满意。信用低的更不满意。下次就不要做这种事了。</p>
+<p>最后总结下。大家的想法是好的，只是工作一定要讲究方法。前途是光明的道路是曲折的。</p>
+<p>最后面。我说这么多问题和方法。但是有个关键的问题没讲。<br>
+用了支付宝匹配到有意思的人以后。人家不在支付宝里面聊天。都最后还是互换微信了怎么办？<br>
+恩。这个我难题我也想过很久，我只能说：谁让你叫支付宝的？</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Nginx不能获取变量的坑]]></title>
+        <id>https://blog.friddle.me/post/2018-01-01-Nginx_Cannot_Get_Variable/</id>
+        <link href="https://blog.friddle.me/post/2018-01-01-Nginx_Cannot_Get_Variable/">
+        </link>
+        <updated>2020-10-31T17:08:19.000Z</updated>
+        <content type="html"><![CDATA[<p>最近做Docker镜像.需要获取环境变量.但是在网上查的都是这种写法.包括StackOverflow.<br>
+但是就是没有返回.真的是一筹莫展.<br>
+本地lua写这句话是正确的.就是在Nginx不返回任何值.</p>
+<pre><code>http {
+  ...
+  server {
+    location / {
+      set_by_lua $api_key 'return os.getenv(&quot;API_KEY&quot;)';
+      ...
+    }
+  }
+}
+</code></pre>
+<p>然后果然在用Google深度搜索后,发现agentzh大大果然又是明灯指导我们.<br>
+给出了文档地址<br>
+<a href="!http://nginx.org/en/docs/ngx_core_module.html#env">nginx</a><br>
+明确告诉我们.在运行状态的时候Nginx已经果断把所有环境变量移除了.<br>
+好的被坑了.</p>
+<p>那就只能在<code>init_by_lua</code>里面使用了.</p>
+<pre><code>http
+{ 
+
+	init_by_lua_block
+	{
+		test=os.getenv(&quot;PATH&quot;);
+	}
+    server{
+     ....
+       location /
+       { 
+
+            set_by_lua $test 'return test';
+       }
+    }
+}
+
+</code></pre>
+<p>解决这个问题真的是已经准备看源代码了.恩.幸亏有明灯.</p>
+]]></content>
+    </entry>
 </feed>
