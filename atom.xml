@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://github.com/friddle/blog</id>
+    <id>https://blog.friddle.me</id>
     <title>friddle的碎碎念</title>
-    <updated>2020-10-31T16:39:24.535Z</updated>
+    <updated>2020-10-31T16:48:21.689Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://github.com/friddle/blog"/>
-    <link rel="self" href="https://github.com/friddle/blog/atom.xml"/>
+    <link rel="alternate" href="https://blog.friddle.me"/>
+    <link rel="self" href="https://blog.friddle.me/atom.xml"/>
     <subtitle>感觉终于找到了update的方法</subtitle>
-    <logo>https://github.com/friddle/blog/images/avatar.png</logo>
-    <icon>https://github.com/friddle/blog/favicon.ico</icon>
+    <logo>https://blog.friddle.me/images/avatar.png</logo>
+    <icon>https://blog.friddle.me/favicon.ico</icon>
     <rights>All rights reserved 2020, friddle的碎碎念</rights>
     <entry>
         <title type="html"><![CDATA[friddle]]></title>
-        <id>https://github.com/friddle/blog/post/friddle/</id>
-        <link href="https://github.com/friddle/blog/post/friddle/">
+        <id>https://blog.friddle.me/post/friddle/</id>
+        <link href="https://blog.friddle.me/post/friddle/">
         </link>
         <updated>2020-10-31T16:06:37.000Z</updated>
         <content type="html"><![CDATA[<p>测试<br>
-😣<img src="https://github.com/friddle/blog/post-images/1604160428720.jpg" alt="" loading="lazy"></p>
+😣<img src="https://blog.friddle.me/post-images/1604160428720.jpg" alt="" loading="lazy"></p>
 ]]></content>
     </entry>
 </feed>
