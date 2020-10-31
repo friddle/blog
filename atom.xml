@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.friddle.me</id>
     <title>friddle的碎碎念</title>
-    <updated>2020-10-31T16:48:21.689Z</updated>
+    <updated>2020-10-31T17:06:56.359Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.friddle.me"/>
     <link rel="self" href="https://blog.friddle.me/atom.xml"/>
@@ -10,14 +10,4 @@
     <logo>https://blog.friddle.me/images/avatar.png</logo>
     <icon>https://blog.friddle.me/favicon.ico</icon>
     <rights>All rights reserved 2020, friddle的碎碎念</rights>
-    <entry>
-        <title type="html"><![CDATA[friddle]]></title>
-        <id>https://blog.friddle.me/post/friddle/</id>
-        <link href="https://blog.friddle.me/post/friddle/">
-        </link>
-        <updated>2020-10-31T16:06:37.000Z</updated>
-        <content type="html"><![CDATA[<p>测试<br>
-😣<img src="https://blog.friddle.me/post-images/1604160428720.jpg" alt="" loading="lazy"></p>
-]]></content>
-    </entry>
 </feed>
