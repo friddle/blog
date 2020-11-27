@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://blog.friddle.me</id>
     <title>friddle的碎碎念</title>
-    <updated>2020-11-27T08:58:52.655Z</updated>
+    <updated>2020-11-27T09:21:23.732Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://blog.friddle.me"/>
     <link rel="self" href="https://blog.friddle.me/atom.xml"/>
@@ -271,10 +271,10 @@ OpenStrictMode</li>
 </li>
 <li>本来是通过dex生成/registerClass的方式回调获得（因为真的不是Android开发,所以不熟悉），然后没有数据输出。突然发现可以调用<code>blockingSingle</code>方式就直接返回了。瞬间解决。真好</li>
 </ol>
-<p><a href="!https://www.jianshu.com/p/d2a1c7ffe063">dex生成方式</a><br>
-<a href="!https://gist.github.com/friddle/142cd63dc2479cc9f249e4384a8f68a0">frida-js一些脚本</a></p>
+<p><a href="https://www.jianshu.com/p/d2a1c7ffe063">dex生成方式</a><br>
+<a href="https://gist.github.com/friddle/142cd63dc2479cc9f249e4384a8f68a0">frida-js一些脚本</a></p>
 <h4 id="arida项目">arida项目</h4>
-<p><a href="!https://github.com/lateautumn4lin/arida">arida-page</a><br>
+<p><a href="https://github.com/lateautumn4lin/arida">arida-page</a><br>
 这个项目还是挺方便的。就是环境搞了好久。后面干脆自己手动安装的依赖，没有使用conda</p>
 <p>搞完后就用fastapi调试接口。<br>
 然后在加上element+vue就可以直接提供接口服务了。这里就不展示了。给个截图<br>
