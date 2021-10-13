@@ -48,7 +48,6 @@ plugins:
  - jekyll-paginate
  - jekyll-sitemap
  - jekyll-gist
- - jekyll-feed
  - jemoji
  - jekyll-include-cache
 
@@ -114,15 +113,10 @@ defaults:
 
 
 category_archive:
- type: liquid
+ #type: liquid
  path: /categories/
 
 tag_archive:
- type: liquid
+ #type: liquid
  path: /tags/
-
-comments:
-   provider: "disqus"
-   disqus:
-     shortname: "blogfriddleme"
 
