@@ -2,7 +2,7 @@
 title: Flutter引入C/C++小节(Flutter With C/C++)
 date: 2021-10-13 15:27 +0000
 categories:
-  - Skill
+  - Tech
 tags:
   - Flutter
 ---
