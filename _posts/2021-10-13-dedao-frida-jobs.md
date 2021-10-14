@@ -272,4 +272,4 @@ dex生成方式
 arida-page 这个项目还是挺方便的。就是环境搞了好久。后面干脆自己手动安装的依赖，没有使用conda   
 搞完后就用fastapi调试接口。 然后在加上element+vue就可以直接提供接口服务了。这里就不展示了。给个截图
 
-![image](assets/images/luoxiaohei.jpg)
+![image](/assets/images/dedao.jpg)
