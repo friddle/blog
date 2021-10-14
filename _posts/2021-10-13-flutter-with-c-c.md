@@ -1,8 +1,12 @@
 ---
-layout: post
 title: Flutter引入C/C++小节(Flutter With C/C++)
 date: 2021-10-13 15:27 +0000
+categories:
+  - Skill
+tags:
+  - Flutter
 ---
+
 具体怎么交互参考:https://flutter.dev/docs/development/platform-integration/c-interop
 
 ## 基础文档核心描述
@@ -74,13 +78,12 @@ dart-lang/samples
 
 |C类型|dart|dart_ffi|intro
 |---|---|---|--|
-|int|int|ffi.Int32|
-|long||int|ffi.Int64|	
-|double|double|ffi.Double|
-|unsigned|int|int|ffi.Uint32|unsinged基本就是前面开始为U
-|char*(string)|ffi.Pointer<Utf8>|ffi.Pointer<Utf8>|转换是String转换到Utf8.toUtf8(string);String转换回来是Utf8.fromUtf8(pointer)
-|char*(数组)|ffi.Pointer<Uint8>|ffi.Pointer<Uint8>	
--------------------------------
+|int|int|ffi.Int32||   
+|long||int|ffi.Int64||	  
+|double|double|ffi.Double||
+|unsigned|int|int|ffi.Uint32|unsinged基本就是前面开始为U|  
+|char*(string)|ffi.Pointer<Utf8>|ffi.Pointer<Utf8>|转换是String转换到Utf8.toUtf8(string);String转换回来是Utf8.fromUtf8(pointer)|  
+|char*(数组)|ffi.Pointer<Uint8>|ffi.Pointer<Uint8>||  
 
 
 

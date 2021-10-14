@@ -1,5 +1,9 @@
 ---
-layout: post
-title: rafit-with-json
-date: 2021-10-13 15:40 +0000
+title: "frida-js的Retrofit思路和尝试"
+categories:
+  - SKILL
+tags:
+  - Retrofit
 ---
+
+
