@@ -1,5 +1,5 @@
 ---
-title: Kotlin Script建议
+title: Kotlin Script推广
 categories:
   - Tech
 tags:
@@ -7,7 +7,7 @@ tags:
 date: 2021-10-14 02:56 +0000
 ---
 
-此文章就两个目的啊。推广Kotlin Script和常见问题的处理办法
+此文章就两个目的啊。推广Kotlin Script和常见问题的处理办法  
 
 ## 为什么建议使用KScript
 假如让你写个脚本。你优先选择的是什么?是Shell,是Python。毕竟基础操作shell够了。复杂的操作Python也够了。   
@@ -105,4 +105,3 @@ java.lang.ClassNotFoundException: java.sql.SQL
 @file:DependsOn("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
 ```
   
-
