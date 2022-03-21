@@ -1,3 +1,4 @@
 cd `dirname $0`
 bundle exec jekyll serve 
+bundle exec jekyll new post "sss"
 bundle exec jekyll post "helloworld"
